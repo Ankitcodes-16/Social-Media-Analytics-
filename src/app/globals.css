@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+@layer base {
+  html,
+  body {
+    min-height: 100%;
+  }
+  body {
+    @apply bg-ink-950 font-sans text-sm text-fg antialiased;
+    font-feature-settings: "cv11", "ss01";
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #2b3546 transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #2b3546;
+    border-radius: 8px;
+  }
+  ::selection {
+    background: rgba(79, 209, 197, 0.28);
+  }
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    @apply outline-none;
+  }
+  :focus-visible {
+    @apply ring-2 ring-signal/60 ring-offset-0;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply text-2xs font-medium uppercase tracking-wider text-fg-dim;
+  }
+  .recharts-text {
+    font-variant-numeric: tabular-nums;
+  }
+}
