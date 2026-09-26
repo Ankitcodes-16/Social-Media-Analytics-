@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: trendsphere
+      POSTGRES_PASSWORD: trendsphere
+      POSTGRES_DB: trendsphere
+    ports:
+      - "5432:5432"
+    volumes:
+      - trendsphere_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trendsphere"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg2://trendsphere:trendsphere@db:5432/trendsphere
+      CORS_ORIGINS: http://localhost:3000
+      RESEED_ON_STARTUP: "true"
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  trendsphere_pgdata:

@@ -1,38 +1,39 @@
 # Trend Sphere
 
-AI-powered multi-platform social media intelligence & analytics — **Phase 1: frontend**,
-built against a realistic simulated dataset behind a swappable service layer.
+AI-powered multi-platform social media intelligence and analytics, with a Next.js
+dashboard, FastAPI backend, and PostgreSQL database.
 
 Trend Sphere watches X and Telegram for topics that are taking off, explains *why* each
 one is trending, maps how it spreads through the network, and raises explainable alerts
-when several signals agree. This phase ships the full dashboard UI and the data contracts
-the backend will implement — not a backend, not real ingestion, and not trained ML models.
-See [Implementation status](#implementation-status) for the exact line between what works
-today and what's simulated.
+when several signals agree. The API and database serve a seeded, simulated scenario.
+Real X and Telegram ingestion and trained ML models are future work; see
+[Implementation status](#implementation-status).
 
 ## Quick start
 
 ```bash
 npm install
 cp .env.example .env.local
+# Set NEXT_PUBLIC_API_SERVICES=all in .env.local to use the backend.
+```
+
+Start the API and PostgreSQL in another terminal:
+
+```bash
+cd backend
+cp .env.example .env
+docker compose up --build
+```
+
+Then start the frontend:
+
+```bash
 npm run dev
 ```
 
-Then open http://localhost:3000. Nothing outside your machine is contacted — the app reads
-entirely from an in-memory simulated dataset by default (see [Data mode](#data-mode)).
-
-> **A note on this build environment.** This project was written in a sandboxed container
-> with no network access, so `npm install` could not be run here and the dev server was
-> never started in this container. Every line of TypeScript was type-checked with `tsc`
-> against the exact dependency versions pinned in `package.json`, and the full application
-> was additionally bundled with esbuild and exercised in a real Chromium browser
-> (via Playwright) against hand-written stand-ins for `next/navigation`, `recharts`,
-> `lucide-react`, and `cytoscape` — 20 end-to-end scenarios covering every page, every
-> loading/error/empty state, the alert status workflow, and network/explorer deep-linking,
-> all passing. That gives strong confidence the app is correct, but the very first
-> `npm install` and `npm run dev` on a real machine with dependencies actually installed
-> has not happened yet. If something doesn't compile, it's most likely a version mismatch
-> in `package.json` — please open an issue or flag it back.
+Open http://localhost:3000 for the dashboard and http://localhost:8000/docs for the API.
+The API health endpoint at http://localhost:8000/api/health checks its database connection.
+To run the frontend against mock data instead, leave `NEXT_PUBLIC_API_SERVICES` empty.
 
 Other scripts:
 
@@ -82,8 +83,7 @@ demo identities (`@anon_*`, `*_demo`).
 
 ```
 src/
-  types/        Shared TypeScript contracts — the frontend mirror of the Pydantic
-                schemas Phase 2 will implement (camelCase JSON).
+  types/        Shared TypeScript contracts — mirrors the Pydantic schemas (camelCase JSON).
   data/mock/    The simulated dataset: deterministic generators for volume, sentiment,
                 posts, the network graph, and the six detection signals, assembled once
                 and memoised (data/mock/dataset.ts) plus a query layer (queries.ts) that
@@ -93,6 +93,9 @@ src/
                 directly.
   components/   UI, chart, and domain-specific (trends/alerts/network/explorer) pieces.
   app/          Next.js App Router pages.
+backend/
+  app/          FastAPI routes, PostgreSQL models, scoring, and seed data.
+  docker-compose.yml  PostgreSQL and API services.
 ```
 
 ### Swapping in the real backend
@@ -128,8 +131,8 @@ Phase 4 reimplements against real ingested data.
 | Dashboard UI (all 6 sections) | **Implemented** | Loading/error/empty states throughout |
 | Service / data-access layer | **Implemented** | Per-service simulated ↔ API switch |
 | Data & detection scoring | **Simulated** | One coherent synthetic dataset; real signal logic, synthetic input |
-| Alert status workflow | **Simulated** | Works in the UI; in-memory for the session only |
-| FastAPI backend + PostgreSQL | Future (Phase 2) | Pydantic schemas already match `src/types` |
+| Alert status workflow | **Implemented** | Persists in PostgreSQL when API-backed |
+| FastAPI backend + PostgreSQL | **Implemented** | Serves the seeded simulated dataset |
 | X & Telegram ingestion | Future (Phase 3) | |
 | Sentiment / topic / trend ML | Future (Phase 4) | Transformers, Sentence-Transformers + scikit-learn |
 | Network analytics & alert engine on real data | Future (Phase 4) | |
@@ -144,6 +147,5 @@ A badge in the top bar always states where the data is coming from: **Simulated 
 
 ## Tech stack
 
-Next.js · React · TypeScript · Tailwind CSS · Recharts · Cytoscape.js · Lucide React.
-(Backend, database, and AI/ML stack are documented in the schemas and signal logic above,
-ready for Phase 2 onward.)
+Next.js · React · TypeScript · Tailwind CSS · Recharts · Cytoscape.js · Lucide React ·
+FastAPI · SQLAlchemy · PostgreSQL.
